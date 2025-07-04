@@ -45,6 +45,7 @@ class SeekingHandler {
 
         this.e = {
             onMediaSeeking: this._onMediaSeeking.bind(this),
+            timeoutId: null,
         };
 
         let chrome_need_idr_fix = (Browser.chrome &&
@@ -59,6 +60,10 @@ class SeekingHandler {
     }
 
     public destroy(): void {
+        if (this.e.timeoutId !== null) {
+            window.clearTimeout(this.e.timeoutId);
+            this.e.timeoutId = null;
+        }
         this._idr_sample_list.clear();
         this._idr_sample_list = null;
         this._media_element.removeEventListener('seeking', this.e.onMediaSeeking);
@@ -148,7 +153,11 @@ class SeekingHandler {
         // else: Prepare for unbuffered seeking
         // Defer the unbuffered seeking since the seeking bar maybe still being draged
         this._seek_request_record_clocktime = SeekingHandler._getClockTime();
-        window.setTimeout(this._pollAndApplyUnbufferedSeek.bind(this), 50);
+        if (this.e.timeoutId !== null) {
+            window.clearTimeout(this.e.timeoutId);
+            this.e.timeoutId = null;
+        }
+        this.e.timeoutId = window.setTimeout(this._pollAndApplyUnbufferedSeek.bind(this), 50);
 
     }
 
@@ -170,7 +179,11 @@ class SeekingHandler {
                 }
             }
         } else {
-            window.setTimeout(this._pollAndApplyUnbufferedSeek.bind(this), 50);
+            if (this.e.timeoutId !== null) {
+                window.clearTimeout(this.e.timeoutId);
+                this.e.timeoutId = null;
+            }
+            this.e.timeoutId = window.setTimeout(this._pollAndApplyUnbufferedSeek.bind(this), 50);
         }
     }
 
